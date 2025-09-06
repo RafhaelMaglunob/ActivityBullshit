@@ -15,11 +15,11 @@ function Content({ hidden = true }) {
   ];
 
   const dayNames = [
-    "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+    "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"
   ];
 
   const [formData, setFormData] = useState({
-    year: 2025,
+    year: 2025  ,
     month: monthNames[0],
     day: dayNames[0],
   });
@@ -65,7 +65,6 @@ function Content({ hidden = true }) {
     setCheckedOutput([]);
   };
 
-
   const handleCheckDays = () => {
     if (checkedDays.length === 0) {
       setCheckedOutput([["No days selected"]]);
@@ -76,6 +75,7 @@ function Content({ hidden = true }) {
     const monthIndex = monthNames.indexOf(month);
     const totalDays = new Date(year, monthIndex + 1, 0).getDate();
     const results = [];
+
     for (let i = 1; i <= totalDays; i++) {
       const d = new Date(year, monthIndex, i);
       const weekday = d.toLocaleString("en-US", { weekday: "long" });
@@ -84,33 +84,44 @@ function Content({ hidden = true }) {
       }
     }
 
-    // 🔹 Build "drop pyramid"
+    // 🔹 Build balanced left-aligned pyramid
     const pyramid = [];
-    let index = 0;
+    const n = results.length;
+
+    // Step 1: Compute row sizes
+    let rowSizes = [];
     let rowSize = 1;
+    let total = 0;
 
-    while (index < results.length) {
-      let nextRow = results.slice(index, index + rowSize);
-      index += rowSize;
-
-      if (nextRow.length < rowSize && pyramid.length > 0) {
-        pyramid[pyramid.length - 1] = [
-          ...pyramid[pyramid.length - 1],
-          ...nextRow,
-        ];
-        break;
-      }
-
-      pyramid.push(nextRow);
-
-      if (rowSize < 3) {
-        rowSize++;
-      }
+    while (total < n) {
+      rowSizes.push(rowSize);
+      total += rowSize;
+      rowSize++;
     }
+
+    // Step 2: Adjust the last rows if total exceeds n
+    let overflow = total - n;
+    let i = rowSizes.length - 1;
+    while (overflow > 0) {
+      rowSizes[i]--;
+      overflow--;
+      i--;
+    }
+
+    // Step 3: Slice results into pyramid according to rowSizes
+    let index = 0;
+    rowSizes.forEach((size) => {
+      pyramid.push(results.slice(index, index + size));
+      index += size;
+    });
 
     setCheckedOutput(pyramid);
   };
-  
+
+
+
+
+
 
   const { chosenDayDates, chosenDayCount } = (() => {
     const monthIndex = monthNames.indexOf(formData.month);
